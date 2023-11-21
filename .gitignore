@@ -1,3 +1,6 @@
+# Private data
+people_images/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
