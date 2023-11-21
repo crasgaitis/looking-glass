@@ -12,8 +12,8 @@ def home():
     # get info
     print("Starting new session...")
     subject_name = input("Subject name: ")
-    time_res = input("Time resolution (s): ")
-    tot_time = input("Time to record (min): ")
+    time_res = float(input("Time resolution (s): "))
+    tot_time = float(input("Time to record (min): "))
     
     tracker = get_tracker()
     

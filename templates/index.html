@@ -32,6 +32,7 @@
             countdown--;
 
             if (countdown < 0) {
+                /* blink! */
                 clearInterval(countdownInterval);
                 countdownElement.style.display = "none";
                 displayImages();

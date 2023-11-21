@@ -3,6 +3,8 @@ import time
 import pandas as pd
 import tobii_research as tr
 
+global global_gaze_data
+
 def get_tracker():
   all_eyetrackers = tr.find_all_eyetrackers()
   print(f'{len(all_eyetrackers)} trackers found.')
@@ -46,10 +48,14 @@ def build_dataset(tracker, label,
     
     for _ in range(intervals):
         data = gaze_data(tracker, time_step_sec)
+        print(data)
         dict_list.append(data)
     
     tot_dict = combine_dicts_with_labels(dict_list)
     df = pd.DataFrame(tot_dict).T
     df['type'] = label
+    
+    output_filename = label + "_data.csv"
+    df.to_csv(output_filename, header=True)
     
     return df, dict_list
