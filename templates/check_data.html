@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Looking Glass Data Check</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
+    
+</head>
+
+<body>
+    <p><strong>ID:</strong> {{ subject_name }}</p>
+    <p><strong>Total time recording:</strong> {{ tot_time }}</p>
+    <p><strong>Time resolution:</strong> <span id="timeRes">{{ time_res }}</span></p>
+
+    <h3>Data stream:</h3>
+    <!-- <div id="txtContent"></div> -->
+    <iframe src="output.txt"></iframe> 
+    
+    <!-- <script>
+        // var timeRes = parseInt(document.getElementById('timeRes').innerText) * 1000;
+
+        // func to fetch and update text file content
+        function updateTxtContent() {
+            $.get('/output.txt', function(data) {
+                $('#txtContent').text(data);
+            });
+        }
+
+        // init update
+        updateTxtContent();
+
+        setInterval(updateTxtContent, 3000);
+    </script> -->
+
+</body>

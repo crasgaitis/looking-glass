@@ -1,9 +1,12 @@
 import math
+import threading
 import time
 import pandas as pd
 import tobii_research as tr
+import keyboard
 
-global global_gaze_data
+global_gaze_data = None
+lock = threading.Lock()
 
 def get_tracker():
   all_eyetrackers = tr.find_all_eyetrackers()
@@ -17,16 +20,19 @@ def get_tracker():
 
 def gaze_data_callback(gaze_data):
   global global_gaze_data
-  global_gaze_data = gaze_data
+  with lock:
+    global_gaze_data = gaze_data
   
 def gaze_data(eyetracker, wait_time=5):
   global global_gaze_data
-
-  eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
+  
+  with lock:
+    eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
 
   time.sleep(wait_time)
-
-  eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
+  
+  with lock:
+    eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
 
   return global_gaze_data
 
@@ -38,7 +44,7 @@ def combine_dicts_with_labels(dict_list):
 
     return combined_dict
 
-def build_dataset(tracker, label, 
+def build_dataset(tracker, label, add_on = False, df_orig = pd.DataFrame(), 
                   time_step_sec = 0.5, tot_time_min = 0.1):
     
     global global_gaze_data
@@ -46,16 +52,30 @@ def build_dataset(tracker, label,
     intervals = math.ceil((tot_time_min * 60) / time_step_sec)
     dict_list = []
     
-    for _ in range(intervals):
-        data = gaze_data(tracker, time_step_sec)
-        print(data)
-        dict_list.append(data)
+    default_flag = "default"
+    
+    with open('output.txt', 'w') as file:
+      for _ in range(intervals):
+          data = gaze_data(tracker, time_step_sec)
+          # print(data)
+          
+          if keyboard.is_pressed(' '):
+              flag = "flag"
+          else:
+              flag = default_flag
+              
+          data['flag'] = flag
+          dict_list.append(data)
+          file.write(str(data) + '\n')
     
     tot_dict = combine_dicts_with_labels(dict_list)
-    df = pd.DataFrame(tot_dict).T
+    df = pd.DataFrame.from_dict(tot_dict, orient='index')
     df['type'] = label
+        
+    if add_on:
+        df_new = pd.concat([df_orig, df])
+        df_new = df_new.reset_index(drop=True)
+        return df_new
     
-    output_filename = label + "_data.csv"
-    df.to_csv(output_filename, header=True)
-    
-    return df, dict_list
+    else:
+        return df, dict_list
