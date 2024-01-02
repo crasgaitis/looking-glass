@@ -11,12 +11,12 @@ lock = threading.Lock()
 
 def get_tracker():
   all_eyetrackers = tr.find_all_eyetrackers()
-  print(f'{len(all_eyetrackers)} trackers found.')
+  # print(f'{len(all_eyetrackers)} trackers found.')
 
   for tracker in all_eyetrackers:
-    print("Model: " + tracker.model)
-    print("Serial number: " + tracker.serial_number) 
-    print(f"Can stream gaze data: {tr.CAPABILITY_HAS_GAZE_DATA in tracker.device_capabilities}")
+    # print("Model: " + tracker.model)
+    # print("Serial number: " + tracker.serial_number) 
+    # print(f"Can stream gaze data: {tr.CAPABILITY_HAS_GAZE_DATA in tracker.device_capabilities}")
     return tracker
 
 def gaze_data_callback(gaze_data):

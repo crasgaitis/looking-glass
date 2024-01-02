@@ -6,7 +6,7 @@ from utils import build_dataset, get_tracker
 SUBJECT = 'test'
 TRACKER = get_tracker()
 TIME_RES = 0.1
-TOT_TIME = 0.1
+TOT_TIME = 0.05
 
 hide_menu_style = """
         <style>
@@ -22,18 +22,19 @@ image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png',
 
 if "current_index" not in st.session_state:
     st.session_state.current_index = 0
-
+    
 # display the current image
-st.image(Image.open(image_files[st.session_state.current_index]), caption='Image', use_column_width=True)
+st.image(Image.open(image_files[st.session_state.current_index]), use_column_width=True)
 
 title = SUBJECT + "_" + str(st.session_state.current_index)
-print(title)
+
 build_dataset(TRACKER, SUBJECT, title = title, time_step_sec = TIME_RES, tot_time_min = TOT_TIME)
 
 # increment index
 st.session_state.current_index += 1
 
 # loop back around
+# comment this out when not testing
 if st.session_state.current_index >= len(image_files):
     st.session_state.current_index = 0
 
