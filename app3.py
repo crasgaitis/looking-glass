@@ -30,6 +30,25 @@ title = SUBJECT + "_" + str(st.session_state.current_index)
 
 build_dataset(TRACKER, SUBJECT, title = title, time_step_sec = TIME_RES, tot_time_min = TOT_TIME)
 
+# New additions:
+selections = []  # save list of inputs as list of numbers
+
+# Dictionary of string options to rating nums
+choices = {'1 text' : 1, 
+           '2 text' : 2, 
+           '3 text' : 3, 
+           '4 text' : 4, 
+           '5 text' : 5}
+
+option = st.selectbox(
+    'Rate your familiarity',
+    ('1 text', '2 text', '3 text', '4 text', '5 text'))
+
+# option is the selected choice; query into choices to get corresponding number rating
+rating = choices[option]
+selections.append(rating)
+
+
 # increment index
 st.session_state.current_index += 1
 
