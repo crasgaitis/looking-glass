@@ -23,7 +23,19 @@ image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png',
 
 if "current_index" not in st.session_state:
     st.session_state.current_index = 0
+    
+if "rating" not in st.session_state:
+    st.session_state.rating = -5
 
+if "file_name" not in st.session_state:
+    st.session_state.file_name = "dummy_file.jpg"
+    
+if "option" not in st.session_state:
+    st.session_state.file_name = 10
+    
+if "selections" not in st.session_state:
+    st.session_state.selections = {}
+    
 # keys: file name, values: rating
 # will be turned into csv file at the very end
 selections = dict()
@@ -42,19 +54,20 @@ if (st.session_state.current_index % 2 == 0):
 
     build_dataset(TRACKER, SUBJECT, title = title, time_step_sec = TIME_RES, tot_time_min = TOT_TIME)
 else:
-    option = st.selectbox(
+    st.session_state.option = st.selectbox(
         'Rate your familiarity',
         ('1 text', '2 text', '3 text', '4 text', '5 text'))
         
-    while option is None:
-        option = st.selectbox(
+    while st.session_state.option == 10:
+        st.session_state.option = st.selectbox(
             'Rate your familiarity',
             ('1 text', '2 text', '3 text', '4 text', '5 text'))
         
     # option is the selected choice; query into choices to get corresponding number rating
-    rating = choices[option]
-    file_name = image_files[st.session_state.current_index - 1]  # ?
-    selections[file_name] = rating        
+    st.session_state.rating = choices[st.session_state.option]
+    st.session_state.file_name = image_files[st.session_state.current_index - 1]  # ?
+    st.session_state.selections[st.session_state.file_name] = st.session_state.rating
+    print(st.session_state.selections)        
 
 # increment index
 st.session_state.current_index += 1
@@ -62,12 +75,9 @@ st.session_state.current_index += 1
 # loop back around
 # comment this out when not testing
 if st.session_state.current_index >= len(image_files):
-    st.session_state.current_index = 0
-
-# create csv file
-print(selections)
-df = pd.DataFrame(selections)
-df.to_csv('output.csv')
+    # st.session_state.current_index = 0
+    df = pd.DataFrame([st.session_state.selections])
+    df.to_csv('output.csv')
 
 # force a re-run of the app to ensure the updated state is used
 st.experimental_rerun()
