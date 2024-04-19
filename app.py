@@ -9,8 +9,8 @@ from pylsl import StreamInlet, resolve_byprop
 
 app = Flask(__name__)
 
-# Global variables
-image_folder = "static/images/"
+# global variables
+image_folder = "static/images_2/"
 images = os.listdir(image_folder)
 current_image_index = 0
 data = []
@@ -149,4 +149,4 @@ if __name__ == '__main__':
         
     threading.Thread(target=show_image).start()
 
-    app.run(debug=True, port=1430)
+    app.run(debug=True, port=1410)
