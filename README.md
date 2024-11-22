@@ -1,5 +1,5 @@
 # looking-glass
-Team: Catherine Rasgaitis, Srishti Bakshi
+Team: Catherine Rasgaitis, Srishti Bakshi, James Wilson
 
 ## FILE DESCRIPTIONS
 - `yaya/` is a directory of CSV files from the pilot study of eye tracking and EEG data. Files are named after what faces were used to generate the stimuli and what % the morph occured at.
