@@ -1,5 +1,5 @@
 # looking-glass
-Team: Catherine Rasgaitis, Srishti Bakshi
+Team: Catherine Rasgaitis, Srishti Bakshi, James Wilson
 
 USAGE:
 0. set subject name in app2 and app3 to set saving directory
