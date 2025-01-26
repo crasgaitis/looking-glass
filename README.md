@@ -3,6 +3,7 @@ Team: Catherine Rasgaitis, Srishti Bakshi, James Wilson
 
 ## FILE DESCRIPTIONS
 - `yaya/` is a directory of CSV files from the pilot study of eye tracking and EEG data. Files are named after what faces were used to generate the stimuli and what % the morph occured at.
+- `eeg/` is a directory of utils to graph/log EEG data from petal.
 - `README.md` is a markdown file (what you're looking at right now) with information on the repository as a whole.
 - `app.py` is the old version of the data collection app which used threads in order to simultaneously collect eeg data, eye tracking data, and display stimuli to the user.
 - `eeg_utils.py` is a utility function file which includes processing and streaming functions for dealing with EEG data.
@@ -21,7 +22,7 @@ USAGE:
 1. set INDEX_CHANNELS in app2 to select what nodes to record from
 - note that temporal resolution and number of nodes have a significant tradeoff
 2. run app2.py w/ eye tracker (show to subject) and run app3.py by running Petal Metrics first (this will run EEG collection in VSCode and does not open in browser)
-3. syncing step: subject should blink several times while facing away from the screen. We can use this data to sync the eye-tracking and eeg clocks 
+3. syncing step: subject should blink several times while facing away from the screen. We can use this data to sync the eye-tracking and eeg clocks
 4. app2.py will stop running automatically, you must press 'q' in terminal for app3.py to stop running. Data saves after both apps terminate.
 
 NOTES:
