@@ -9,7 +9,7 @@ import PIL
 # Ensure you have the StyleGAN3 repository cloned locally
 STYLEGAN3_DIR = r"stylegan3"
 # TODO: Change the MODEL_URL to the desired StyleGAN3 model
-MODEL_URL = "https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-metfaces-1024x1024.pkl"
+MODEL_URL = "https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl"
 OUTPUT_DIR = "generated_faces"
 
 # Add StyleGAN3 utilities to the path
