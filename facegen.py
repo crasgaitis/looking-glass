@@ -5,12 +5,16 @@ from torchvision.utils import save_image
 from pathlib import Path
 import requests
 import PIL
+import time
 
 # Ensure you have the StyleGAN3 repository cloned locally
 STYLEGAN3_DIR = r"stylegan3"
 # TODO: Change the MODEL_URL to the desired StyleGAN3 model
 MODEL_URL = "https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl"
-OUTPUT_DIR = "generated_faces"
+OUTPUT_DIR = "facegen/generated_faces"
+TRUNCATION = 0.5 # Balances the accuracy and diversity of the generated images. Lower values give more realistic faces.
+RANDOM_SEED = 18
+NUM_IMAGES = 5
 
 # Add StyleGAN3 utilities to the path
 import sys
@@ -23,6 +27,8 @@ from legacy import load_network_pkl
 
 # Download pre-trained StyleGAN3 model
 def download_model(model_path):
+    model_dir = os.path.dirname(model_path)
+    os.makedirs(model_dir, exist_ok=True) # Create the directory if it doesn't exist
     if not os.path.exists(model_path):
         print("Downloading StyleGAN3 pre-trained model...")
         response = requests.get(MODEL_URL, stream=True)
@@ -56,7 +62,10 @@ def generate_images(generator, num_images=5, truncation=1.0, seed=42):
         print(f"Saved image: {img_path}")
 
 if __name__ == "__main__":
-    model_path = "stylegan3_model.pkl"
+    model_path = "facegen/stylegan3_model.pkl"
     download_model(model_path)
     generator = load_generator(model_path)
-    generate_images(generator, num_images=5)
+    start_time = time.time()
+    generate_images(generator, num_images=NUM_IMAGES, seed=RANDOM_SEED, truncation=TRUNCATION)
+    print(f"Time taken: {time.time() - start_time:.2f} seconds")
+    print("Time per image: {:.2f} seconds".format((time.time() - start_time) / NUM_IMAGES))
