@@ -12,7 +12,7 @@ STYLEGAN3_DIR = r"stylegan3"
 # TODO: Change the MODEL_URL to the desired StyleGAN3 model
 MODEL_URL = "https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl"
 OUTPUT_DIR = "facegen/generated_faces"
-TRUNCATION = 0.5 # Balances the accuracy and diversity of the generated images. Lower values give more realistic faces.
+TRUNCATION = 0.4 # Balances the accuracy and diversity of the generated images. Lower values give more realistic faces.
 RANDOM_SEED = 18
 NUM_IMAGES = 5
 
