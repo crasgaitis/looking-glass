@@ -19,7 +19,6 @@ if petal_stream is None:
 
 inlet = StreamInlet(petal_stream, max_buflen=1)
 
-# Initialize a ring buffer for EEG data
 buffer = deque(maxlen=buffer_size)
 
 print("Receiving EEG data...")
@@ -27,17 +26,14 @@ print("Receiving EEG data...")
 def compute_band_power(data, fs):
     """Computes power spectral density and extracts EEG bands."""
     f, Pxx = welch(data, fs=fs, nperseg=nperseg)
-
-    # Total power across all frequencies
     total_power = np.trapz(Pxx, f)
 
-    # Define frequency bands
+    # frequency bands
     delta_band = (f >= 1) & (f < 4)
     theta_band = (f >= 4) & (f < 8)
     alpha_band = (f >= 8) & (f < 12)
     beta_band = (f >= 12) & (f < 30)
 
-    # Integrate the power spectral density over each band
     delta_power = np.trapz(Pxx[delta_band], f[delta_band])
     theta_power = np.trapz(Pxx[theta_band], f[theta_band])
     alpha_power = np.trapz(Pxx[alpha_band], f[alpha_band])
@@ -62,22 +58,24 @@ beta_patch = plt.Rectangle((0, 0), 1, 1, fc='red')
 ax.legend([delta_patch, theta_patch, alpha_patch, beta_patch], ['Delta', 'Theta', 'Alpha', 'Beta'])
 
 while True:
-    # Pull a sample from the LSL stream
     sample, timestamp = inlet.pull_sample()
 
-    # Ensure sample is valid before processing
     if sample:
         buffer.append(sample)
 
-    # Process when buffer is full
     if len(buffer) == buffer_size:
-        data = np.array(buffer)  # Convert buffer to NumPy array
+        data = np.array(buffer)
 
-        # Process only channel 1 (index 0)
-        ch = 2
-        delta, theta, alpha, beta, total_power = compute_band_power(data[:, ch], fs)
+        # avergae channel 2 and 3 (frontal lobe)
+        delta2, theta2, alpha2, beta2, total_power2 = compute_band_power(data[:, 0], fs)
+        delta3, theta3, alpha3, beta3, total_power3 = compute_band_power(data[:, 3], fs)
 
-        # Compute percentages safely
+        delta = (delta2 + delta3) / 2
+        theta = (theta2 + theta3) / 2
+        alpha = (alpha2 + alpha3) / 2
+        beta = (beta2 + beta3) / 2
+        total_power = (total_power2 + total_power3) / 2
+
         if total_power != 0:
             delta_percent = (delta / total_power) * 100
             theta_percent = (theta / total_power) * 100
@@ -86,14 +84,12 @@ while True:
         else:
             delta_percent = theta_percent = alpha_percent = beta_percent = 0
 
-        # Clear the axis to redraw
         ax.cla()
         ax.set_ylim(0, 100)
         ax.set_ylabel('Percentage (%)')
         ax.set_title('Current Band Power Distribution')
         ax.set_xticks([])
 
-        # Plot the stacked bar chart
         bottom_alpha = delta_percent + theta_percent
         bottom_beta = bottom_alpha + alpha_percent
 
@@ -102,9 +98,7 @@ while True:
         ax.bar(0, alpha_percent, bottom=delta_percent + theta_percent, label='Alpha', color='yellow')
         ax.bar(0, beta_percent, bottom=delta_percent + theta_percent + alpha_percent, label='Beta', color='red')
 
-        # Add legend
         ax.legend(loc='upper right')
 
-        # Refresh the plot
         plt.draw()
         plt.pause(0.001)
