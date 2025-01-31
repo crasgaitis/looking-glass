@@ -106,6 +106,7 @@
         <br />
         <h2 id="mostPrevalent" style="display: none"></h2>
         <h2>Live EEG</h2>
+        <p id="latency"></p>
         <h3>Theta</h3>
         <div
             id="theta"
@@ -173,6 +174,14 @@
                 document.getElementById("theta").style.width = data.theta + "%";
                 document.getElementById("beta").style.width = data.beta + "%";
                 document.getElementById("alpha").style.width = data.alpha + "%";
+
+                // calculate latency by subtracting the timestamp from the current time
+                document.getElementById("latency").innerText =
+                    "Latency: " +
+                    Math.round(
+                        (new Date().getTime() / 1000 - data.timestamp) * 1000,
+                    ) +
+                    "ms";
             });
 
             socket.on("eye_tracking_data", (data) => {
