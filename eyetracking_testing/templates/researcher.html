@@ -42,6 +42,7 @@
                 &quot;Open Sans&quot;,
                 &quot;Helvetica Neue&quot;,
                 sans-serif;
+            margin-left: 40px;
         "
     >
         <h1>Looking Glass Researcher Portal</h1>
@@ -90,15 +91,39 @@
             <h2 id="dataTitle">Backend Not Ready</h2>
             <p id="dataDesc">Awaiting Connection...</p>
         </div>
-        <hr />
-        <button id="calibBegin">
-            <i class="fa-solid fa-gear"></i> Calibrate
-        </button>
-        <button id="record"><i class="fa-solid fa-circle"></i> Record</button>
-        <p id="saved"></p>
-        <hr />
+        <div style="margin-top: 10px">
+            <button id="calibBegin">
+                <i class="fa-solid fa-gear"></i> Calibrate
+            </button>
+            <button id="record">
+                <i class="fa-solid fa-circle"></i> Record
+            </button>
+            <p id="saved"></p>
+        </div>
+        <br />
         <p id="etData"></p>
         <p id="eegData"></p>
+        <br />
+        <h2 id="mostPrevalent" style="display: none"></h2>
+        <h2>Live EEG</h2>
+        <h3>Theta</h3>
+        <div
+            id="theta"
+            style="height: 20px; width: 2%; background-color: blue"
+        ></div>
+
+        <h3>Beta</h3>
+        <div
+            id="beta"
+            style="height: 20px; width: 2%; background-color: purple"
+        ></div>
+
+        <h3>Alpha</h3>
+        <div
+            id="alpha"
+            style="height: 20px; width: 2%; background-color: red"
+        ></div>
+
         <script>
             let socket = io("http://localhost:5000");
 
@@ -129,11 +154,25 @@
                 document.getElementById("eegTitle").innerText = "EEG Ready";
                 document.getElementById("eegDesc").innerText =
                     "Connected to the EEG device.";
-                document.getElementById("eegData").innerText = JSON.stringify(
-                    data,
-                    null,
-                    2,
+                //document.getElementById("eegData").innerText = JSON.stringify(
+                //    data,
+                //    null,
+                //    2,
+                //);
+
+                // get the most prevalent value (largest) (either delta, theta, alpha, or beta)
+                let relevantData = Object.keys(data).filter(
+                    (key) => key !== "timestamp",
                 );
+                let mostPrevalent = relevantData.reduce((a, b) =>
+                    data[a] > data[b] ? a : b,
+                );
+                document.getElementById("mostPrevalent").innerText =
+                    mostPrevalent;
+
+                document.getElementById("theta").style.width = data.theta + "%";
+                document.getElementById("beta").style.width = data.beta + "%";
+                document.getElementById("alpha").style.width = data.alpha + "%";
             });
 
             socket.on("eye_tracking_data", (data) => {
