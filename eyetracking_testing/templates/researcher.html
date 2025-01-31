@@ -9,6 +9,13 @@
             integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
             crossorigin="anonymous"
         ></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+            integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
         <style>
             button {
                 padding: 10px 20px;
@@ -17,6 +24,7 @@
                 background-color: #4caf50;
                 color: white;
                 border: none;
+                cursor: pointer;
             }
         </style>
     </head>
@@ -83,7 +91,11 @@
             <p id="dataDesc">Awaiting Connection...</p>
         </div>
         <hr />
-        <button id="calibBegin">Begin Calibration</button>
+        <button id="calibBegin">
+            <i class="fa-solid fa-gear"></i> Calibrate
+        </button>
+        <button id="record"><i class="fa-solid fa-circle"></i> Record</button>
+        <p id="saved"></p>
         <hr />
         <p id="etData"></p>
         <p id="eegData"></p>
@@ -180,6 +192,35 @@
                 .addEventListener("click", () => {
                     socket.emit("begin_calib", true);
                 });
+
+            socket.on("paths", (data) => {
+                document.getElementById("saved").innerText =
+                    "EEG/ET data saved to " +
+                    data.eeg +
+                    " and " +
+                    data.eyetracker;
+            });
+
+            var record = false;
+
+            document.getElementById("record").addEventListener("click", () => {
+                if (record) {
+                    record = false;
+                    document.getElementById("record").innerHTML =
+                        "<i class='fa-solid fa-circle'></i> Record";
+                    document.getElementById("record").style.backgroundColor =
+                        "#4caf50";
+                    socket.emit("end_recording", true);
+                } else {
+                    record = true;
+                    document.getElementById("record").innerHTML =
+                        "<i class='fa-solid fa-circle'></i> Stop Recording";
+                    document.getElementById("record").style.backgroundColor =
+                        "#f44336";
+                    socket.emit("start_recording", true);
+                    document.getElementById("saved").innerText = "";
+                }
+            });
         </script>
     </body>
 </html>

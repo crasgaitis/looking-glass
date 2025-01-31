@@ -91,5 +91,6 @@ while True:
             'delta': delta_percent,
             'theta': theta_percent,
             'alpha': alpha_percent,
-            'beta': beta_percent
+            'beta': beta_percent,
+            'timestamp': timestamp
         })
