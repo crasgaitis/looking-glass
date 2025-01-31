@@ -1,0 +1,78 @@
+<!DOCTYPE HTML >
+<html>
+   <head>
+      <title>Looking Glass</title>
+      <script src="https://api.gazerecorder.com/GazeCloudAPI.js" ></script>
+      <style type="text/css">
+         body {
+         overflow: hidden;
+         }
+
+         button {
+             padding: 10px 20px;
+                font-size: 20px;
+                border-radius: 5px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+         }
+      </style>
+      <script type = "text/javascript" >
+         function PlotGaze(GazeData) {
+            document.getElementById("GazeData").innerHTML = "GazeX: " + GazeData.GazeX + " GazeY: " + GazeData.GazeY;
+            document.getElementById("HeadPhoseData").innerHTML = " HeadX: " + GazeData.HeadX + " HeadY: " + GazeData.HeadY + " HeadZ: " + GazeData.HeadZ;
+            document.getElementById("HeadRotData").innerHTML = " Yaw: " + GazeData.HeadYaw + " Pitch: " + GazeData.HeadPitch + " Roll: " + GazeData.HeadRoll;
+            var x = GazeData.docX;
+            var y = GazeData.docY;
+
+            var gaze = document.getElementById("gaze");
+            x -= gaze .clientWidth/2;
+            y -= gaze .clientHeight/2;
+
+         	gaze.style.left = x + "px";
+         	gaze.style.top = y + "px";
+
+            if(GazeData.state != 0)
+            {
+             	if( gaze.style.display  == 'block')
+             	gaze  .style.display = 'none';
+              document.getElementById("result").style.display = 'none';
+              document.getElementById("begin").style.display = 'block';
+            }
+            else
+            {
+             	if( gaze.style.display  == 'none')
+             	gaze  .style.display = 'block';
+              document.getElementById("result").style.display = 'block';
+              document.getElementById("begin").style.display = 'none';
+            }
+         }
+
+        window.addEventListener("load", function() {
+            GazeCloudAPI.OnCalibrationComplete =function(){ console.log('gaze Calibration Complete')  }
+            GazeCloudAPI.OnCamDenied =  function(){ console.log('camera  access denied')  }
+            GazeCloudAPI.OnError =  function(msg){ console.log('err: ' + msg)  }
+            GazeCloudAPI.UseClickRecalibration = true;
+            GazeCloudAPI.OnResult = PlotGaze;
+        });
+
+      </script>
+   </head>
+   <body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+      <div style="margin-left: 50px;">
+          <h1>Looking Glass Experiment</h1>
+          <p>by Synaptech</p>
+         <button id="begin" type="button" onclick="GazeCloudAPI.StartEyeTracking();">Begin</button>
+         <div id="result" style="display: none;">
+            <p >
+               Real-Time Result:
+            <p id = "GazeData" > </p>
+            <p id = "HeadPhoseData" > </p>
+            <p id = "HeadRotData" > </p>
+            </p>
+         </div>
+         <div id ="gaze" style ='position: absolute;display:none;width: 100px;height: 100px;border-radius: 50%;border: solid 2px  rgba(255, 255,255, .2);	box-shadow: 0 0 100px 3px rgba(125, 125,125, .5);	pointer-events: none;	z-index: 999999'></div>
+
+      </div>
+    </body>
+</html>
