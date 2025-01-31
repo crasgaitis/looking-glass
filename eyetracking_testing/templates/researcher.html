@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Looking Glass Researcher Portal</title>
+        <script
+            src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+            integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+            crossorigin="anonymous"
+        ></script>
+        <style>
+            button {
+                padding: 10px 20px;
+                font-size: 20px;
+                border-radius: 5px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+            }
+        </style>
+    </head>
+    <body
+        style="
+            font-family:
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                &quot;Segoe UI&quot;,
+                Roboto,
+                Oxygen,
+                Ubuntu,
+                Cantarell,
+                &quot;Open Sans&quot;,
+                &quot;Helvetica Neue&quot;,
+                sans-serif;
+        "
+    >
+        <h1>Looking Glass Researcher Portal</h1>
+        <div
+            id="eyetrackingStatus"
+            style="
+                background-color: red;
+                width: 20%;
+                text-align: center;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                display: inline-block;
+            "
+        >
+            <h2 id="etTitle">Eyetracking Not Ready</h2>
+            <p id="etDesc">Awaiting Connection...</p>
+        </div>
+        <div
+            id="eegStatus"
+            style="
+                background-color: red;
+                width: 20%;
+                text-align: center;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                display: inline-block;
+            "
+        >
+            <h2 id="eegTitle">EEG Not Ready</h2>
+            <p id="eegDesc">Awaiting Connection...</p>
+        </div>
+        <div
+            id="dataStatus"
+            style="
+                background-color: red;
+                width: 20%;
+                text-align: center;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                display: inline-block;
+            "
+        >
+            <h2 id="dataTitle">Backend Not Ready</h2>
+            <p id="dataDesc">Awaiting Connection...</p>
+        </div>
+        <hr />
+        <button id="calibBegin">Begin Calibration</button>
+        <hr />
+        <p id="etData"></p>
+        <p id="eegData"></p>
+        <script>
+            let socket = io("http://localhost:5000");
+
+            socket.on("connect", () => {
+                console.log("Connected to the server.");
+                document.getElementById("dataStatus").style.backgroundColor =
+                    "green";
+                document.getElementById("dataTitle").innerText =
+                    "Backend Ready";
+                document.getElementById("dataDesc").innerText =
+                    "Connected to the server.";
+            });
+
+            socket.on("disconnect", () => {
+                console.log("Disconnected from the server.");
+                document.getElementById("dataStatus").style.backgroundColor =
+                    "red";
+                document.getElementById("dataTitle").innerText =
+                    "Backend Not Ready";
+                document.getElementById("dataDesc").innerText =
+                    "Awaiting Connection...";
+            });
+
+            // Example event listener
+            socket.on("eeg", (data) => {
+                document.getElementById("eegStatus").style.backgroundColor =
+                    "green";
+                document.getElementById("eegTitle").innerText = "EEG Ready";
+                document.getElementById("eegDesc").innerText =
+                    "Connected to the EEG device.";
+                document.getElementById("eegData").innerText = JSON.stringify(
+                    data,
+                    null,
+                    2,
+                );
+            });
+
+            socket.on("eye_tracking_data", (data) => {
+                document.getElementById("etData").innerText = JSON.stringify(
+                    data,
+                    null,
+                    2,
+                );
+            });
+
+            socket.on("eye_tracking_connected", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "orange";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Waiting";
+                document.getElementById("etDesc").innerText =
+                    "Awaiting Calibration...";
+            });
+
+            socket.on("eye_tracking_calibrating", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "orange";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Calibrating";
+                document.getElementById("etDesc").innerText = "Calibrating...";
+            });
+
+            socket.on("eye_tracking_calibrated", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "green";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Ready";
+                document.getElementById("etDesc").innerText =
+                    "Calibrated and ready";
+            });
+
+            socket.on("eye_track_disconnect", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "red";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Not Ready";
+                document.getElementById("etDesc").innerText =
+                    "Awaiting Connection...";
+            });
+
+            document
+                .getElementById("calibBegin")
+                .addEventListener("click", () => {
+                    socket.emit("begin_calib", true);
+                });
+        </script>
+    </body>
+</html>
