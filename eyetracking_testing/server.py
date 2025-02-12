@@ -6,7 +6,7 @@ from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 recording = False
 eeg_data = {}
@@ -97,4 +97,4 @@ def handle_end_recording(data):
 
 
 if __name__ == '__main__':
-    socketio.run(app, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", port=5001, allow_unsafe_werkzeug=True)

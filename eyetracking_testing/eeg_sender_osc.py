@@ -27,8 +27,8 @@ def connect_error(data):
 def disconnect():
     print("Disconnected from server.")
 
-# Connect to the server running on localhost:5000
-sio.connect('http://127.0.0.1:5000')
+# Connect to the server running on localhost:5001
+sio.connect('http://127.0.0.1:5001')
 
 def compute_band_power(data, fs):
     """Computes power spectral density and extracts EEG bands."""
