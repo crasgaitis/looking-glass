@@ -171,9 +171,12 @@
                 document.getElementById("mostPrevalent").innerText =
                     mostPrevalent;
 
-                document.getElementById("theta").style.width = data.theta + "%";
-                document.getElementById("beta").style.width = data.beta + "%";
-                document.getElementById("alpha").style.width = data.alpha + "%";
+                document.getElementById("theta").style.width =
+                    data.theta * 50 + "%";
+                document.getElementById("beta").style.width =
+                    data.beta * 50 + "%";
+                document.getElementById("alpha").style.width =
+                    data.alpha * 50 + "%";
 
                 // calculate latency by subtracting the timestamp from the current time
                 document.getElementById("latency").innerText =
