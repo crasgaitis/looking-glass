@@ -98,11 +98,23 @@
             <button id="record">
                 <i class="fa-solid fa-circle"></i> Record
             </button>
+            <button id="start"><i class="fa-solid fa-play"></i> Start</button>
             <p id="saved"></p>
         </div>
         <br />
         <p id="etData"></p>
         <p id="eegData"></p>
+        <br />
+        <h2>Face Selection</h2>
+        <div>
+            <select
+                id="dropdown"
+                style="width: 200px; padding: 10px; font-size: 16px"
+            >
+                <option value="">Choose an option</option>
+                <!-- Options will be added dynamically here -->
+            </select>
+        </div>
         <br />
         <h2 id="mostPrevalent" style="display: none"></h2>
         <h2>Live EEG</h2>
@@ -136,6 +148,8 @@
                     "Backend Ready";
                 document.getElementById("dataDesc").innerText =
                     "Connected to the server.";
+
+                socket.emit("get_directories", true);
             });
 
             socket.on("disconnect", () => {
@@ -146,6 +160,25 @@
                     "Backend Not Ready";
                 document.getElementById("dataDesc").innerText =
                     "Awaiting Connection...";
+            });
+
+            document.getElementById("start").addEventListener("click", () => {
+                socket.emit("start_show_faces", {
+                    path: document.getElementById("dropdown").value,
+                });
+            });
+
+            socket.on("directories", (directories) => {
+                console.log("Directories received:", directories);
+
+                // Handle directories here
+                directories.faces.forEach((directory) => {
+                    // add to dropdown
+                    var option = document.createElement("option");
+                    option.value = directory;
+                    option.text = directory;
+                    document.getElementById("dropdown").appendChild(option);
+                });
             });
 
             // Example event listener

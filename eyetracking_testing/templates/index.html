@@ -34,7 +34,7 @@
             </p>
          </div>
          <div id ="gaze" style ='position: absolute;display:none;width: 100px;height: 100px;border-radius: 50%;border: solid 2px  rgba(255, 255,255, .2);	box-shadow: 0 0 100px 3px rgba(125, 125,125, .5);	pointer-events: none;	z-index: 999999'></div>
-
+         <img style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); height: 90%;" id="image">
       </div>
       <script type = "text/javascript" >
         let socket = io("https://lookingglass.james.baby");
@@ -90,6 +90,19 @@
         document.getElementById("begin").addEventListener("click", function() {
             socket.emit('eye_tracking_calibrating', true);
             GazeCloudAPI.StartEyeTracking();
+        });
+
+        function showImage(path, index) {
+          document.getElementById("image").src = "https://lookingglass.james.baby/i/" + path + "/" + index
+          setTimeout(() => {
+            index++;
+            showImage(path, index);
+          }, 5000);
+        }
+
+        socket.on("start_show_faces", (data) => {
+            console.log(data);
+            showImage(data.path, 0);
         });
 
         socket.on("connect", () => {

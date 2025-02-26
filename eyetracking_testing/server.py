@@ -2,7 +2,7 @@ import socket
 import pickle
 import uuid
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -11,6 +11,24 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 recording = False
 eeg_data = {}
 eyetracker_data = {}
+
+# serve images
+@app.route('/images/<path:path>')
+def serve_images(path):
+    return send_from_directory('data', path)
+
+# given an image index, return it from the dir else return 404
+@app.route('/i/<string:folder>/<int:index>')
+def serve_image(folder, index):
+    # get the index'th image from the data directory (list files then get that index, do NOT use name)
+    images = [img for img in os.listdir(f'data/{folder}') if img != '.DS_Store']
+    # order by name
+    images.sort()
+
+    if index < len(images):
+        return send_from_directory(f'data/{folder}', images[index])
+    else:
+        return '404', 404
 
 @app.route('/')
 def index():
@@ -72,6 +90,16 @@ def handle_start_recording(data):
     eyetracker_data = {}
     recording = True
 
+@socketio.on('start_show_faces')
+def handle_start_show_faces(data):
+    print(data)
+    print("Starting show faces")
+    emit('start_show_faces', data, broadcast=True)
+
+@socketio.on('get_directories')
+def handle_get_directories(data):
+    directories = [d for d in os.listdir('data') if os.path.isdir(os.path.join('data', d))]
+    emit('directories', {'faces': directories}, broadcast=True)
 
 @socketio.on('end_recording')
 def handle_end_recording(data):
