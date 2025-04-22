@@ -45,7 +45,7 @@
           <button id="okButton" style="display: block; margin-top: 20px; position: absolute; left: 49%; transform: translateX(-50%); top:60%; cursor: pointer">Continue</button>
       </div>
       <script type = "text/javascript" >
-        let socket = io("https://lookingglass.james.baby");
+        let socket = io("http://localhost:5001");
 
          function PlotGaze(GazeData) {
             document.getElementById("GazeData").innerHTML = "GazeX: " + GazeData.GazeX + " GazeY: " + GazeData.GazeY;
@@ -133,7 +133,7 @@
         });
 
         function showImage() {
-          document.getElementById("image").src = "https://lookingglass.james.baby/i/" + currPath + "/" + currIndex
+          document.getElementById("image").src = "http://localhost:5001/i/" + currPath + "/" + currIndex
           setTimeout(() => {
             var data = {
                 image_number: currIndex,
