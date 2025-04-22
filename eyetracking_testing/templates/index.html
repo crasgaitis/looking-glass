@@ -36,6 +36,14 @@
          <div id ="gaze" style ='position: absolute;display:none;width: 100px;height: 100px;border-radius: 50%;border: solid 2px  rgba(255, 255,255, .2);	box-shadow: 0 0 100px 3px rgba(125, 125,125, .5);	pointer-events: none;	z-index: 999999'></div>
          <img style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); height: 90%;" id="image">
       </div>
+      <div id="fullscreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 1000; display: none;">
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; margin: 0;">
+              <span style="margin-right: 20px; font-weight: bold; font-size: 24px;">Friend</span>
+              <input type="range" min="0" max="10" value="5" class="slider" id="feedback" style="width: 300px; height: 20px;">
+              <span style="margin-left: 20px; font-weight: bold; font-size: 24px;">Stranger</span>
+          </div>
+          <button id="okButton" style="display: block; margin-top: 20px; position: absolute; left: 49%; transform: translateX(-50%); top:60%; cursor: pointer">Continue</button>
+      </div>
       <script type = "text/javascript" >
         let socket = io("https://lookingglass.james.baby");
 
@@ -65,7 +73,7 @@
             else
             {
              	if( gaze.style.display  == 'none')
-             	gaze  .style.display = 'block';
+             	gaze  .style.display = 'none';
               document.getElementById("result").style.display = 'block';
               document.getElementById("begin").style.display = 'none';
 
@@ -92,17 +100,70 @@
             GazeCloudAPI.StartEyeTracking();
         });
 
-        function showImage(path, index) {
-          document.getElementById("image").src = "https://lookingglass.james.baby/i/" + path + "/" + index
+        var currPath = '';
+        var currIndex = 0;
+
+        document.getElementById("okButton").addEventListener("click", function() {
+
+
+          document.getElementById("fullscreen").style.display = "none";
+
+          var data = {
+              image_number: currIndex,
+              action: 'hide',
+              feedback: document.getElementById("feedback").value,
+              type: 'image_feedback',
+              unix_millis: Date.now()
+          };
+
+          socket.emit('state_update', data);
+
+          currIndex++;
+
+          var data = {
+              image_number: currIndex,
+              action: 'show',
+              type: 'image',
+              unix_millis: Date.now()
+          };
+
+          socket.emit('state_update', data);
+
+          showImage(currPath, currIndex);
+        });
+
+        function showImage() {
+          document.getElementById("image").src = "https://lookingglass.james.baby/i/" + currPath + "/" + currIndex
           setTimeout(() => {
-            index++;
-            showImage(path, index);
+            var data = {
+                image_number: currIndex,
+                action: 'hide',
+                type: 'image',
+                unix_millis: Date.now()
+            };
+
+            socket.emit('state_update', data);
+
+            var data = {
+                image_number: currIndex,
+                action: 'show',
+                type: 'image_feedback',
+                unix_millis: Date.now()
+            };
+
+            socket.emit('state_update', data);
+
+            document.getElementById("fullscreen").style.display = "block";
+
+
           }, 5000);
         }
 
         socket.on("start_show_faces", (data) => {
             console.log(data);
-            showImage(data.path, 0);
+            currIndex = 0;
+            currPath = data.path;
+            showImage(data.path, currIndex);
         });
 
         socket.on("connect", () => {

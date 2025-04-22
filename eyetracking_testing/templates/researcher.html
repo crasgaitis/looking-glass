@@ -95,7 +95,7 @@
             <button id="calibBegin">
                 <i class="fa-solid fa-gear"></i> Calibrate
             </button>
-            <button id="record">
+            <button id="record" style="display: none">
                 <i class="fa-solid fa-circle"></i> Record
             </button>
             <button id="start"><i class="fa-solid fa-play"></i> Start</button>
@@ -115,28 +115,31 @@
                 <!-- Options will be added dynamically here -->
             </select>
         </div>
+        <h2>Image List</h2>
+        <input id="imageListInput" />
         <br />
         <h2 id="mostPrevalent" style="display: none"></h2>
         <h2>Live EEG</h2>
         <p id="latency"></p>
-        <h3>Theta</h3>
-        <div
-            id="theta"
-            style="height: 20px; width: 2%; background-color: blue"
-        ></div>
+        <div style="display: none">
+            <h3>Theta</h3>
+            <div
+                id="theta"
+                style="height: 20px; width: 2%; background-color: blue"
+            ></div>
 
-        <h3>Beta</h3>
-        <div
-            id="beta"
-            style="height: 20px; width: 2%; background-color: purple"
-        ></div>
+            <h3>Beta</h3>
+            <div
+                id="beta"
+                style="height: 20px; width: 2%; background-color: purple"
+            ></div>
 
-        <h3>Alpha</h3>
-        <div
-            id="alpha"
-            style="height: 20px; width: 2%; background-color: red"
-        ></div>
-
+            <h3>Alpha</h3>
+            <div
+                id="alpha"
+                style="height: 20px; width: 2%; background-color: red"
+            ></div>
+        </div>
         <script>
             let socket = io("https://lookingglass.james.baby/");
 
@@ -162,10 +165,29 @@
                     "Awaiting Connection...";
             });
 
+            var currentlyRunning = false;
+
             document.getElementById("start").addEventListener("click", () => {
-                socket.emit("start_show_faces", {
-                    path: document.getElementById("dropdown").value,
-                });
+                if (!currentlyRunning) {
+                    currentlyRunning = true;
+                    document.getElementById("start").innerHTML =
+                        "Running... Click to stop recording";
+                    document.getElementById("start").style.backgroundColor =
+                        "purple";
+
+                    socket.emit("start_recording", true);
+                    socket.emit("start_show_faces", {
+                        path: document.getElementById("dropdown").value,
+                    });
+                } else {
+                    currentlyRunning = false;
+                    document.getElementById("start").innerHTML =
+                        "Recording Complete";
+                    document.getElementById("start").style.backgroundColor =
+                        "green";
+
+                    socket.emit("end_recording", true);
+                }
             });
 
             socket.on("directories", (directories) => {

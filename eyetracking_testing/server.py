@@ -9,8 +9,9 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 recording = False
-eeg_data = {}
+eeg_data = []
 eyetracker_data = {}
+state_data = []
 
 # serve images
 @app.route('/images/<path:path>')
@@ -49,7 +50,7 @@ def handle_eeg(data):
     global eeg_data
     global eyetracker_data
     if recording:
-        eeg_data[data['timestamp']] = data
+        eeg_data.append(data)
     emit('eeg', data, broadcast=True)
 
 @socketio.on('eye_tracking_data')
@@ -86,9 +87,15 @@ def handle_start_recording(data):
     global recording
     global eeg_data
     global eyetracker_data
-    eeg_data = {}
+    global state_data
+    state_data = []
+    eeg_data = []
     eyetracker_data = {}
     recording = True
+
+@socketio.on('state_update')
+def handle_state_update(data):
+    state_data.append(data)
 
 @socketio.on('start_show_faces')
 def handle_start_show_faces(data):
@@ -107,21 +114,24 @@ def handle_end_recording(data):
     global eeg_data
     global eyetracker_data
     global recording
+    global state_data
     recording = False
 
     uid = uuid.uuid4()
 
     eeg_filename = f"sessions/{uid}_eeg.pickle"
     eyetracker_filename = f"sessions/{uid}_et.pickle"
+    state_filename = f"sessions/{uid}_state.pickle"
 
     # send pathname to client
-    emit('paths', {'eeg': eeg_filename, 'eyetracker': eyetracker_filename}, broadcast=True)
+    emit('paths', {'eeg': eeg_filename, 'eyetracker': eyetracker_filename, 'state': state_filename}, broadcast=True)
 
     if not os.path.exists("sessions"):
         os.makedirs("sessions")
 
     pickle.dump(eeg_data, open(eeg_filename, "wb"))
     pickle.dump(eyetracker_data, open(eyetracker_filename, "wb"))
+    pickle.dump(state_data, open(state_filename, "wb"))
 
 
 if __name__ == '__main__':
