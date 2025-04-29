@@ -44,6 +44,12 @@
           </div>
           <button id="okButton" style="display: block; margin-top: 20px; position: absolute; left: 49%; transform: translateX(-50%); top:60%; cursor: pointer">Continue</button>
       </div>
+      <div id="complete" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 1000; display: none;">
+          <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column;">
+              <h1 style="font-size: 32px; margin-bottom: 20px;">Test Complete</h1>
+              <p style="font-size: 20px;">Thank you for your participation.</p>
+          </div>
+      </div>
       <script type = "text/javascript" >
         let socket = io("http://localhost:5001");
 
@@ -122,6 +128,7 @@
 
           var data = {
               image_number: currIndex,
+              image_path: currPath,
               action: 'show',
               type: 'image',
               unix_millis: Date.now()
@@ -133,10 +140,36 @@
         });
 
         function showImage() {
+          // fetch "http://localhost:5001/i/" + currPath + "/" + currIndex and if its 404 show that the test is done
+          fetch("http://localhost:5001/i/" + currPath + "/" + currIndex)
+            .then(response => {
+              if (!response.ok && response.status === 404) {
+                document.getElementById("complete").style.display = "block";
+                socket.emit("end_recording", true)
+              }
+              return response;
+            })
+            .catch(error => {
+              console.log('Error:', error);
+            });
+
+          if (currIndex === 0) {
+            var data = {
+                image_number: currIndex,
+                image_path: currPath,
+                action: 'show',
+                type: 'image',
+                unix_millis: Date.now()
+            };
+
+            socket.emit('state_update', data);
+          }
+
           document.getElementById("image").src = "http://localhost:5001/i/" + currPath + "/" + currIndex
           setTimeout(() => {
             var data = {
                 image_number: currIndex,
+                image_path: currPath,
                 action: 'hide',
                 type: 'image',
                 unix_millis: Date.now()
@@ -146,6 +179,7 @@
 
             var data = {
                 image_number: currIndex,
+                image_path: currPath,
                 action: 'show',
                 type: 'image_feedback',
                 unix_millis: Date.now()
@@ -156,7 +190,7 @@
             document.getElementById("fullscreen").style.display = "block";
 
 
-          }, 5000);
+          }, 2000);
         }
 
         socket.on("start_show_faces", (data) => {

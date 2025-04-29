@@ -5,6 +5,8 @@ session_eeg = pickle.load(open(f"sessions/{session_id}_eeg.pickle", "rb"))
 session_et = pickle.load(open(f"sessions/{session_id}_et.pickle", "rb"))
 session_state = pickle.load(open(f"sessions/{session_id}_state.pickle", "rb"))
 
+print(session_state)
+
 # Get the keys from the session_et dictionary
 keys = list(session_eeg.keys())
 
