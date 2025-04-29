@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Looking Glass Researcher Portal</title>
+        <script
+            src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+            integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+            crossorigin="anonymous"
+        ></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+            integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <style>
+            button {
+                padding: 10px 20px;
+                font-size: 20px;
+                border-radius: 5px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body
+        style="
+            font-family:
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                &quot;Segoe UI&quot;,
+                Roboto,
+                Oxygen,
+                Ubuntu,
+                Cantarell,
+                &quot;Open Sans&quot;,
+                &quot;Helvetica Neue&quot;,
+                sans-serif;
+            margin-left: 40px;
+        "
+    >
+        <h1>Looking Glass Researcher Portal</h1>
+        <div
+            id="eyetrackingStatus"
+            style="
+                background-color: red;
+                width: 20%;
+                text-align: center;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                display: inline-block;
+            "
+        >
+            <h2 id="etTitle">Eyetracking Not Ready</h2>
+            <p id="etDesc">Awaiting Connection...</p>
+        </div>
+        <div
+            id="eegStatus"
+            style="
+                background-color: red;
+                width: 20%;
+                text-align: center;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                display: inline-block;
+            "
+        >
+            <h2 id="eegTitle">EEG Not Ready</h2>
+            <p id="eegDesc">Awaiting Connection...</p>
+        </div>
+        <div
+            id="dataStatus"
+            style="
+                background-color: red;
+                width: 20%;
+                text-align: center;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                display: inline-block;
+            "
+        >
+            <h2 id="dataTitle">Backend Not Ready</h2>
+            <p id="dataDesc">Awaiting Connection...</p>
+        </div>
+        <div style="margin-top: 10px">
+            <button id="calibBegin">
+                <i class="fa-solid fa-gear"></i> Calibrate
+            </button>
+            <button id="record" style="display: none">
+                <i class="fa-solid fa-circle"></i> Record
+            </button>
+            <button id="start"><i class="fa-solid fa-play"></i> Start</button>
+            <p id="saved"></p>
+        </div>
+        <br />
+        <p id="etData"></p>
+        <p id="eegData"></p>
+        <br />
+        <h2>Face Selection</h2>
+        <div>
+            <select
+                id="dropdown"
+                style="width: 200px; padding: 10px; font-size: 16px"
+            >
+                <option value="">Choose an option</option>
+                <!-- Options will be added dynamically here -->
+            </select>
+        </div>
+        <h2>Image List</h2>
+        <input id="imageListInput" />
+        <br />
+        <h2 id="mostPrevalent" style="display: none"></h2>
+        <h2>Live EEG</h2>
+        <p id="latency"></p>
+        <div style="display: none">
+            <h3>Theta</h3>
+            <div
+                id="theta"
+                style="height: 20px; width: 2%; background-color: blue"
+            ></div>
+
+            <h3>Beta</h3>
+            <div
+                id="beta"
+                style="height: 20px; width: 2%; background-color: purple"
+            ></div>
+
+            <h3>Alpha</h3>
+            <div
+                id="alpha"
+                style="height: 20px; width: 2%; background-color: red"
+            ></div>
+        </div>
+        <script>
+            let socket = io("http://localhost:5001");
+
+            socket.on("connect", () => {
+                console.log("Connected to the server.");
+                document.getElementById("dataStatus").style.backgroundColor =
+                    "green";
+                document.getElementById("dataTitle").innerText =
+                    "Backend Ready";
+                document.getElementById("dataDesc").innerText =
+                    "Connected to the server.";
+
+                socket.emit("get_directories", true);
+            });
+
+            socket.on("disconnect", () => {
+                console.log("Disconnected from the server.");
+                document.getElementById("dataStatus").style.backgroundColor =
+                    "red";
+                document.getElementById("dataTitle").innerText =
+                    "Backend Not Ready";
+                document.getElementById("dataDesc").innerText =
+                    "Awaiting Connection...";
+            });
+
+            var currentlyRunning = false;
+
+            document.getElementById("start").addEventListener("click", () => {
+                if (!currentlyRunning) {
+                    currentlyRunning = true;
+                    document.getElementById("start").innerHTML =
+                        "Running... Click to stop recording";
+                    document.getElementById("start").style.backgroundColor =
+                        "purple";
+
+                    socket.emit("start_recording", true);
+                    socket.emit("start_show_faces", {
+                        path: document.getElementById("dropdown").value,
+                    });
+                } else {
+                    currentlyRunning = false;
+                    document.getElementById("start").innerHTML =
+                        "Recording Complete";
+                    document.getElementById("start").style.backgroundColor =
+                        "green";
+
+                    socket.emit("end_recording", true);
+                }
+            });
+
+            socket.on("directories", (directories) => {
+                console.log("Directories received:", directories);
+
+                // Handle directories here
+                directories.faces.forEach((directory) => {
+                    // add to dropdown
+                    var option = document.createElement("option");
+                    option.value = directory;
+                    option.text = directory;
+                    document.getElementById("dropdown").appendChild(option);
+                });
+            });
+
+            // Example event listener
+            socket.on("eeg", (data) => {
+                document.getElementById("eegStatus").style.backgroundColor =
+                    "green";
+                document.getElementById("eegTitle").innerText = "EEG Ready";
+                document.getElementById("eegDesc").innerText =
+                    "Connected to the EEG device.";
+                //document.getElementById("eegData").innerText = JSON.stringify(
+                //    data,
+                //    null,
+                //    2,
+                //);
+
+                // get the most prevalent value (largest) (either delta, theta, alpha, or beta)
+                let relevantData = Object.keys(data).filter(
+                    (key) => key !== "timestamp",
+                );
+                let mostPrevalent = relevantData.reduce((a, b) =>
+                    data[a] > data[b] ? a : b,
+                );
+                document.getElementById("mostPrevalent").innerText =
+                    mostPrevalent;
+
+                document.getElementById("theta").style.width =
+                    data.theta * 50 + "%";
+                document.getElementById("beta").style.width =
+                    data.beta * 50 + "%";
+                document.getElementById("alpha").style.width =
+                    data.alpha * 50 + "%";
+
+                // calculate latency by subtracting the timestamp from the current time
+                document.getElementById("latency").innerText =
+                    "Latency: " +
+                    Math.round(
+                        (new Date().getTime() / 1000 - data.timestamp) * 1000,
+                    ) +
+                    "ms";
+            });
+
+            socket.on("eye_tracking_data", (data) => {
+                document.getElementById("etData").innerText = JSON.stringify(
+                    data,
+                    null,
+                    2,
+                );
+            });
+
+            socket.on("eye_tracking_connected", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "orange";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Waiting";
+                document.getElementById("etDesc").innerText =
+                    "Awaiting Calibration...";
+            });
+
+            socket.on("eye_tracking_calibrating", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "orange";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Calibrating";
+                document.getElementById("etDesc").innerText = "Calibrating...";
+            });
+
+            socket.on("eye_tracking_calibrated", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "green";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Ready";
+                document.getElementById("etDesc").innerText =
+                    "Calibrated and ready";
+            });
+
+            socket.on("eye_track_disconnect", (data) => {
+                console.log("Data received:", data);
+                document.getElementById(
+                    "eyetrackingStatus",
+                ).style.backgroundColor = "red";
+                document.getElementById("etTitle").innerText =
+                    "Eyetracking Not Ready";
+                document.getElementById("etDesc").innerText =
+                    "Awaiting Connection...";
+            });
+
+            document
+                .getElementById("calibBegin")
+                .addEventListener("click", () => {
+                    socket.emit("begin_calib", true);
+                });
+
+            socket.on("paths", (data) => {
+                document.getElementById("saved").innerText =
+                    "EEG/ET data saved to " +
+                    data.eeg +
+                    " and " +
+                    data.eyetracker;
+            });
+
+            var record = false;
+
+            document.getElementById("record").addEventListener("click", () => {
+                if (record) {
+                    record = false;
+                    document.getElementById("record").innerHTML =
+                        "<i class='fa-solid fa-circle'></i> Record";
+                    document.getElementById("record").style.backgroundColor =
+                        "#4caf50";
+                    socket.emit("end_recording", true);
+                } else {
+                    record = true;
+                    document.getElementById("record").innerHTML =
+                        "<i class='fa-solid fa-circle'></i> Stop Recording";
+                    document.getElementById("record").style.backgroundColor =
+                        "#f44336";
+                    socket.emit("start_recording", true);
+                    document.getElementById("saved").innerText = "";
+                }
+            });
+        </script>
+    </body>
+</html>

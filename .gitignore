@@ -1,0 +1,4 @@
+facegen/generatedfaces
+__pycache__
+facegen/*.pkl
+*.pyc
