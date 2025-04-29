@@ -1,6 +1,25 @@
 # looking-glass
 Team: Catherine Rasgaitis, Srishti Bakshi, James Wilson, Arav Bhosle, Brice Liu
 
+## Everything you need is in /eyetracking_testing
+
+1. Install dependencies (`pip install -r requirements.txt`)
+2. cd into eyetracking_testing (`cd eyetracking_testing`)
+3. (OPTIONAL) Make a new directory under `eyetracking_testing/data` and put the images you want to show the user in there.
+4. Run `python server.py`
+5. Run `python server.py`
+6. Go to http://localhost:5000 for what the user sees and http://localhost:5000/researcher for what you see
+7. Open Petal Metrics, set stream name to `PetalStream` (default) and set Type to `OSC`. Make sure Destination IP Address is set to `localhost` and Port is set to `14739` (defaults).
+8. Press Save.
+9. Start streaming through Petal.
+10. In a new terminal, cd into eyetracking_testing (`cd eyetracking_testing`)
+11. Run `python eeg_sender_osc.py`
+12. NOW go to http://localhost:5000/researcher, you should see the EEG status say connected and the backend light up green as well.
+13. Press the 'Calibrate' button and switch to the user view and eyetracking will begin calibration.
+14. Choose the directory on the researcher view to show the images from.
+15. Press the start button on the researcher view to begin recording data.
+16. When the user completes all tasks, the data will be stored to `sessions/(session_id)`. The `session_id` will be shown in the researcher view after the data recording is complete.
+
 ## FILE DESCRIPTIONS
 - `yaya/` is a directory of CSV files from the pilot study of eye tracking and EEG data. Files are named after what faces were used to generate the stimuli and what % the morph occured at.
 - `eeg/` is a directory of utils to graph/log EEG data from petal.
