@@ -1,0 +1,4 @@
+Flask
+flask_socketio
+pickle
+python-osc
