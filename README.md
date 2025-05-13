@@ -3,6 +3,7 @@ Team: Catherine Rasgaitis, Srishti Bakshi, James Wilson, Arav Bhosle, Brice Liu
 
 ## Everything you need is in /eyetracking_testing
 
+1. Run `git clone https://github.com/crasgaitis/looking-glass` and `cd looking-glass`
 1. Install dependencies (`pip install -r requirements.txt`)
 2. cd into eyetracking_testing (`cd eyetracking_testing`)
 3. (OPTIONAL) Make a new directory under `eyetracking_testing/data` and put the images you want to show the user in there.
