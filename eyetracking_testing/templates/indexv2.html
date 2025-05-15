@@ -1,0 +1,311 @@
+<!DOCTYPE HTML >
+<html>
+   <head>
+      <title>Looking Glass</title>
+      <script src="webgazer.js" type="text/javascript"></script>
+      <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+      <style type="text/css">
+         body {
+         overflow: hidden;
+         }
+
+         button {
+             padding: 10px 20px;
+                font-size: 20px;
+                border-radius: 5px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+         }
+
+         .calib-circle{
+             position:absolute;
+             width:60px;height:60px;
+             border-radius:50%;
+             background:red;
+             cursor:pointer;
+             display:flex;
+             align-items:center;
+             justify-content:center;
+         }
+         .calib-circle::after{               /* tiny white target */
+             content:"";
+             width:10px;height:10px;
+             border:2px solid white;
+             border-radius:50%;
+         }
+      </style>
+   </head>
+   <body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+      <div style="margin-top: 20%; text-align: center; width: 100%">
+          <h1>Looking Glass Experiment</h1>
+          <p style="font-size: 20px;">We will begin in a moment.</p>
+          <p id="status">Connecting...</p>
+         <button id="begin" type="button" style="display: none;">Begin</button>
+         <div id="result" style="display: none;">
+            <p >
+               Real-Time Result:
+            <p id = "GazeData" > </p>
+            <p id = "HeadPhoseData" > </p>
+            <p id = "HeadRotData" > </p>
+            </p>
+         </div>
+         <div id ="gaze" style ='position: absolute;display:none;width: 100px;height: 100px;border-radius: 50%;border: solid 2px  rgba(255, 255,255, .2);	box-shadow: 0 0 100px 3px rgba(125, 125,125, .5);	pointer-events: none;	z-index: 999999'></div>
+         <img style="position: absolute; top:50%; left:50%; transform: translate(-50%, -50%); height: 90%; z-index: 3;" id="image">
+      </div>
+      <div id="fullscreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 1000; display: none;">
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; margin: 0;">
+              <span style="margin-right: 20px; font-weight: bold; font-size: 24px;">Friend</span>
+              <input type="range" min="0" max="10" value="5" class="slider" id="feedback" style="width: 300px; height: 20px;">
+              <span style="margin-left: 20px; font-weight: bold; font-size: 24px;">Stranger</span>
+          </div>
+          <button id="okButton" style="display: block; margin-top: 20px; position: absolute; left: 49%; transform: translateX(-50%); top:60%; cursor: pointer">Continue</button>
+      </div>
+      <div id="complete" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: white; z-index: 1000; display: none;">
+          <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column;">
+              <h1 style="font-size: 32px; margin-bottom: 20px;">Test Complete</h1>
+              <p style="font-size: 20px;">Thank you for your participation.</p>
+          </div>
+      </div>
+      <div id="calibOverlay" style="display:none;
+              position:fixed;inset:0;z-index:1;
+              background:white;align-items:center;justify-content:center;flex-direction:column;">
+         <h2 id="calibPrompt" style="font-size:28px;margin-bottom:12px;">
+             We will now begin calibration. Click and look at every red circle on the screen.
+         </h2>
+         <p id="calibSub" style="font-size:20px;margin-bottom:32px;"></p>
+         <!-- circles are injected here -->
+      </div>
+      <script type = "text/javascript" >
+        let socket = io("http://localhost:5001");
+
+        function startCalibration () {
+            const overlay = document.getElementById("calibOverlay");
+            const prompt  = document.getElementById("calibPrompt");
+            const sub     = document.getElementById("calibSub");
+
+            /* --- build 20 points -------------------------------------------------- */
+            const cols = 5, rows = 4;      // 5×4 grid  → 20 points total
+            const R    = 30;               // circle radius (must match CSS/JS)
+
+            const w = window.innerWidth,
+                  h = window.innerHeight;
+
+            const pts = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    /*  c = 0 → centre at x =  R         (left edge)
+                     *  c = cols-1 → centre at x = w-R   (right edge)
+                     *  rows work the same for y         (top/bottom edges)
+                     *  everything in between is spaced evenly.
+                     */
+                    pts.push({
+                        x: (c / (cols - 1)) * (w - 2 * R) + R,
+                        y: (r / (rows - 1)) * (h - 2 * R) + R
+                    });
+                }
+            }
+
+            let batchStart   = 0;        // index of first point in the current batch
+            let firstClick   = true;     // to hide the text after the very first click
+
+            overlay.style.display = "flex";
+            nextBatch();
+
+            /* --------------------------------------------------------------------- */
+            function nextBatch () {
+                overlay.querySelectorAll(".calib-circle").forEach(el => el.remove());
+                pts.slice(batchStart, batchStart + 4).forEach(pt => addCircle(pt));
+            }
+
+            /* create one target ---------------------------------------------------- */
+            function addCircle ({ x, y }) {
+                const el = document.createElement("div");
+                el.className = "calib-circle";
+                el.style.left = (x - R) + "px";
+                el.style.top  = (y - R) + "px";
+                el.dataset.clicks = "0";                 // track 3 clicks needed
+                el.addEventListener("click", handle, { once: false });
+                overlay.appendChild(el);
+            }
+
+            /* handle clicks -------------------------------------------------------- */
+            function handle (e) {
+                webgazer.recordScreenPosition(e.clientX, e.clientY, "click");
+
+                const el = e.currentTarget;
+                let clicks = +el.dataset.clicks + 1;
+                el.dataset.clicks = clicks;
+
+                if (firstClick) {                        // hide the prompt once
+                    prompt.style.display = "none";
+                    sub.style.display    = "none";
+                    firstClick = false;
+                }
+
+                switch (clicks) {
+                    case 1:  // red → green
+                        el.style.background = "orange";
+                        break;
+                    case 2:  // green → lighter green (visual feedback)
+                        el.style.background = "yellow";
+                        break;
+                    case 3:  // third click → gone
+                        el.remove();
+                        break;
+                }
+
+                /* batch finished? -------------------------------------------------- */
+                const remaining = overlay.querySelectorAll(".calib-circle").length;
+                if (remaining === 0) {
+                    batchStart += 4;
+                    if (batchStart >= pts.length) {
+                        prompt.textContent = "Calibration Complete";
+                        prompt.style.display = "block";
+                        sub.textContent     = "Please let the researcher know.";
+                        sub.style.display   = "block";
+                        socket.emit("calibration_complete", true);
+                    } else {
+                        nextBatch();
+                    }
+                }
+            }
+        }
+
+
+         webgazer.setGazeListener(function(data, elapsedTime) {
+         	if (data == null) {
+          		return;
+         	}
+          data.time = Date.now();
+           socket.emit('eye_tracking_data', data)
+         	var xprediction = data.x; //these x coordinates are relative to the viewport
+         	var yprediction = data.y; //these y coordinates are relative to the viewport
+         	console.log(elapsedTime); //elapsed time is based on time since begin was called
+         })
+
+
+        document.getElementById("begin").addEventListener("click", function() {
+            socket.emit('eye_tracking_calibrating', true);
+        });
+
+        var currPath = '';
+        var currIndex = 0;
+
+        document.getElementById("okButton").addEventListener("click", function() {
+
+
+          document.getElementById("fullscreen").style.display = "none";
+
+          var data = {
+              image_number: currIndex,
+              action: 'hide',
+              feedback: document.getElementById("feedback").value,
+              type: 'image_feedback',
+              unix_millis: Date.now()
+          };
+
+          socket.emit('state_update', data);
+
+          currIndex++;
+
+          var data = {
+              image_number: currIndex,
+              image_path: currPath,
+              action: 'show',
+              type: 'image',
+              unix_millis: Date.now()
+          };
+
+          socket.emit('state_update', data);
+
+          showImage(currPath, currIndex);
+        });
+
+        function showImage() {
+          // fetch "http://localhost:5001/i/" + currPath + "/" + currIndex and if its 404 show that the test is done
+          fetch("http://localhost:5001/i/" + currPath + "/" + currIndex)
+            .then(response => {
+              if (!response.ok && response.status === 404) {
+                document.getElementById("complete").style.display = "block";
+                socket.emit("end_recording", true)
+              }
+              return response;
+            })
+            .catch(error => {
+              console.log('Error:', error);
+            });
+
+          if (currIndex === 0) {
+            var data = {
+                image_number: currIndex,
+                image_path: currPath,
+                action: 'show',
+                type: 'image',
+                unix_millis: Date.now()
+            };
+
+            socket.emit('state_update', data);
+          }
+
+          document.getElementById("image").src = "http://localhost:5001/i/" + currPath + "/" + currIndex
+          setTimeout(() => {
+            var data = {
+                image_number: currIndex,
+                image_path: currPath,
+                action: 'hide',
+                type: 'image',
+                unix_millis: Date.now()
+            };
+
+            socket.emit('state_update', data);
+
+            var data = {
+                image_number: currIndex,
+                image_path: currPath,
+                action: 'show',
+                type: 'image_feedback',
+                unix_millis: Date.now()
+            };
+
+            socket.emit('state_update', data);
+
+            document.getElementById("fullscreen").style.display = "block";
+
+
+          }, 2000);
+        }
+
+        socket.on("start_show_faces", (data) => {
+            console.log(data);
+            currIndex = 0;
+            currPath = data.path;
+            showImage(data.path, currIndex);
+        });
+
+        socket.on("connect", () => {
+            document.getElementById("status").innerText = "Connected to server";
+        });
+
+        socket.on("begin_calib", () => {
+          socket.emit('eye_tracking_calibrating', true);
+          webgazer.showPredictionPoints(false)
+          webgazer.applyKalmanFilter(true)
+          webgazer.setTracker("trackingjs")
+          webgazer.setRegression("weightedRidge")
+          webgazer.clearData()
+          webgazer.showVideo(false)
+          webgazer.begin()
+            console.log("Calibration started");
+            startCalibration();
+        });
+
+        window.addEventListener('beforeunload', function (event) {
+            socket.emit('eye_track_disconnect', true);
+        });
+
+        socket.emit('eye_tracking_connected', true);
+
+      </script>
+    </body>
+</html>

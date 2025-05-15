@@ -18,6 +18,14 @@ state_data = []
 def serve_images(path):
     return send_from_directory('data', path)
 
+@app.route('/GazeCloudAPI.js')
+def serve_GazeCloudAPI():
+    return send_from_directory('static', 'GazeCloudAPI.js')
+
+@app.route('/webgazer.js')
+def serve_webgazer():
+    return send_from_directory('static', 'webgazer.js')
+
 # given an image index, return it from the dir else return 404
 @app.route('/i/<string:folder>/<int:index>')
 def serve_image(folder, index):
@@ -33,7 +41,11 @@ def serve_image(folder, index):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('indexv2.html')
+
+@app.route('/old')
+def indexv2():
+    return render_template('indexold.html')
 
 @app.route('/researcher')
 def researcher():
